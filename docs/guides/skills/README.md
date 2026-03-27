@@ -2,7 +2,7 @@
 
 An interactive, comprehensive guide on how to build custom skills for Claude, based on [Anthropic's official documentation](https://resources.anthropic.com/hubfs/The-Complete-Guide-to-Building-Skill-for-Claude.pdf) and the [latest API docs](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview).
 
-## [View the live guide →](https://ivaylo1987.github.io/ai-coding/guides/skills/)
+## [View the live guide →](https://ivaylo1987.github.io/hands-on-ai/guides/skills/)
 
 ## What's inside
 
