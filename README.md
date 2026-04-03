@@ -7,6 +7,7 @@ Practical, interactive guides for building with AI — each one a self-contained
 | Guide | Description | Link |
 |-------|-------------|------|
 | **[Building Skills for Claude](./docs/guides/skills/)** | 7-chapter journey from zero to production skill. Covers structure, writing, patterns, testing, and distribution. | [View guide →](https://ivaylo1987.github.io/hands-on-ai/guides/skills/) |
+| **[CCA Prep Guide](./docs/guides/cca/)** | Practical study guide for the Claude Certified Architect exam. Courses, docs, projects, and checklists mapped to all 5 domains. | [View guide →](https://ivaylo1987.github.io/hands-on-ai/guides/cca/) |
 | *More coming soon* | | |
 
 ## How this repo works
@@ -17,7 +18,9 @@ hands-on-ai/
 │   ├── index.html           # Landing page
 │   ├── 404.html             # Custom 404
 │   └── guides/
-│       └── skills/
+│       ├── skills/
+│       │   └── index.html
+│       └── cca/
 │           └── index.html
 ├── reference/               # Personal notes, PDFs, images — NOT published
 ├── README.md
