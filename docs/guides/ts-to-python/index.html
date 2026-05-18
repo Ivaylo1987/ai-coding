@@ -1,0 +1,2182 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>From TS to Python — A Field Guide for the TS-Fluent</title>
+<meta name="description" content="A practical TypeScript/Node.js to Python field guide. The runtime mental model, a 4-week crossing plan, tooling translations, survival syntax, and the gotchas that trip up JS developers.">
+<meta name="author" content="Ivaylo Hristov">
+<link rel="canonical" href="https://ivaylo1987.github.io/hands-on-ai/guides/ts-to-python/">
+
+<!-- Open Graph -->
+<meta property="og:type" content="article">
+<meta property="og:title" content="From TS to Python — A Field Guide for the TS-Fluent">
+<meta property="og:description" content="The runtime mental model, a 4-week crossing plan, tooling translations, survival syntax, and the gotchas that trip up JS developers.">
+<meta property="og:url" content="https://ivaylo1987.github.io/hands-on-ai/guides/ts-to-python/">
+<meta property="og:image" content="https://ivaylo1987.github.io/hands-on-ai/guides/ts-to-python/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:site_name" content="Hands-on AI">
+
+<!-- Twitter/X Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="From TS to Python — A Field Guide for the TS-Fluent">
+<meta name="twitter:description" content="The runtime mental model, a 4-week crossing plan, tooling translations, survival syntax, and the gotchas that trip up JS developers.">
+<meta name="twitter:image" content="https://ivaylo1987.github.io/hands-on-ai/guides/ts-to-python/og-image.png">
+
+<!-- Favicon -->
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐍</text></svg>">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,700;0,9..144,900;1,9..144,500&family=JetBrains+Mono:wght@400;500;700&family=Inter+Tight:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #f2ece1;
+    --paper-deep: #e8e1d2;
+    --ink: #181613;
+    --ink-soft: #4a443c;
+    --rule: #181613;
+    --accent: #d8412f;
+    --accent-deep: #a82c1d;
+    --ts: #2f6fd8;
+    --py: #2a8a4a;
+    --highlight: #ffe27a;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Inter Tight', sans-serif;
+    font-size: 17px;
+    line-height: 1.55;
+  }
+
+  /* paper grain */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0.5;
+    mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.08 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  }
+
+  .wrap {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 48px 32px 120px;
+    position: relative;
+    z-index: 2;
+  }
+
+  /* ── MASTHEAD ─────────────────────────────────────── */
+  .masthead {
+    border-top: 6px solid var(--ink);
+    border-bottom: 1px solid var(--ink);
+    padding: 14px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+  .masthead .dot {
+    display: inline-block;
+    width: 8px; height: 8px;
+    background: var(--accent);
+    border-radius: 50%;
+    margin-right: 8px;
+    vertical-align: middle;
+  }
+
+  /* ── HERO ─────────────────────────────────────────── */
+  .hero {
+    padding: 64px 0 48px;
+    border-bottom: 1px solid var(--ink);
+    display: grid;
+    grid-template-columns: 1.6fr 1fr;
+    gap: 48px;
+    align-items: end;
+  }
+  .hero h1 {
+    font-family: 'Fraunces', serif;
+    font-weight: 900;
+    font-size: clamp(64px, 11vw, 168px);
+    line-height: 0.88;
+    margin: 0;
+    letter-spacing: -0.04em;
+  }
+  .hero h1 .arrow {
+    color: var(--accent);
+    font-style: italic;
+    font-weight: 500;
+    display: inline-block;
+    transform: translateY(-0.05em);
+  }
+  .hero h1 .py {
+    font-style: italic;
+    font-weight: 700;
+  }
+  .hero-meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--ink-soft);
+  }
+  .hero-meta p { margin: 0 0 12px; }
+  .hero-meta .lede {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-weight: 500;
+    font-size: 22px;
+    line-height: 1.35;
+    color: var(--ink);
+    text-transform: none;
+    letter-spacing: 0;
+    margin-top: 16px;
+  }
+
+  /* ── SECTION HEADERS ──────────────────────────────── */
+  .section {
+    padding: 64px 0 24px;
+    border-bottom: 1px solid var(--ink);
+  }
+  .section-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+  .section-tag::before {
+    content: "";
+    width: 36px;
+    height: 1px;
+    background: var(--accent);
+  }
+  .section h2 {
+    font-family: 'Fraunces', serif;
+    font-weight: 700;
+    font-size: clamp(36px, 5vw, 56px);
+    line-height: 1;
+    letter-spacing: -0.02em;
+    margin: 0 0 32px;
+    max-width: 18ch;
+  }
+  .section h2 em {
+    color: var(--accent);
+    font-style: italic;
+    font-weight: 500;
+  }
+
+  /* ── ROADMAP ──────────────────────────────────────── */
+  .roadmap {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+    border: 1px solid var(--ink);
+    background: var(--paper-deep);
+  }
+  .week {
+    padding: 28px 22px 32px;
+    border-right: 1px solid var(--ink);
+    position: relative;
+    min-height: 280px;
+    display: flex;
+    flex-direction: column;
+  }
+  .week:last-child { border-right: none; }
+  .week-num {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-weight: 500;
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin-bottom: 6px;
+  }
+  .week-title {
+    font-family: 'Fraunces', serif;
+    font-weight: 700;
+    font-size: 28px;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    margin-bottom: 18px;
+  }
+  .week-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .week-list li {
+    padding: 8px 0;
+    border-top: 1px dashed var(--ink-soft);
+    display: flex;
+    gap: 8px;
+  }
+  .week-list li:first-child { border-top: 1px solid var(--ink); }
+  .week-list li::before {
+    content: "→";
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--accent);
+    flex-shrink: 0;
+  }
+  .week .corner {
+    position: absolute;
+    top: 14px;
+    right: 18px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+  }
+
+  /* ── MAPPING TABLE ───────────────────────────────── */
+  .mapping {
+    border: 1px solid var(--ink);
+  }
+  .map-head, .map-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 2fr;
+    align-items: center;
+  }
+  .map-head {
+    background: var(--ink);
+    color: var(--paper);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 14px 20px;
+  }
+  .map-row {
+    padding: 18px 20px;
+    border-top: 1px solid var(--ink);
+    font-size: 15px;
+    transition: background 0.15s;
+  }
+  .map-row:hover { background: var(--paper-deep); }
+  .map-row .from {
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--ts);
+    font-weight: 500;
+  }
+  .map-row .to {
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--py);
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .map-row .to::before {
+    content: "↦";
+    color: var(--ink-soft);
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+  }
+  .map-row .note {
+    color: var(--ink-soft);
+    font-size: 14px;
+    line-height: 1.4;
+    font-family: 'Fraunces', serif;
+  }
+
+  /* ── CODE COMPARE ────────────────────────────────── */
+  .compare {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border: 1px solid var(--ink);
+    background: var(--ink);
+    gap: 1px;
+  }
+  .code-pane {
+    background: #1e1c19;
+    padding: 24px 26px;
+    position: relative;
+  }
+  .code-pane .label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .label-ts { color: #6ea2ff; }
+  .label-py { color: #7cd99a; }
+  .label .pip {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+  .label-ts .pip { background: #6ea2ff; }
+  .label-py .pip { background: #7cd99a; }
+
+  pre {
+    margin: 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.65;
+    color: #e8e2d4;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .k  { color: #ff8a65; }
+  .s  { color: #d8c87a; }
+  .c  { color: #6f6a5e; font-style: italic; }
+  .fn { color: #9ecbff; }
+  .ty { color: #c9a0ff; }
+
+  /* ── STARTER PROJECT ─────────────────────────────── */
+  .starter {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr;
+    gap: 32px;
+  }
+  .starter-card {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 32px;
+    position: relative;
+    overflow: hidden;
+  }
+  .starter-card::after {
+    content: "uv";
+    position: absolute;
+    bottom: -40px;
+    right: -10px;
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-weight: 900;
+    font-size: 240px;
+    line-height: 1;
+    color: var(--accent);
+    opacity: 0.18;
+    pointer-events: none;
+  }
+  .starter-card h3 {
+    font-family: 'Fraunces', serif;
+    font-weight: 700;
+    font-size: 32px;
+    line-height: 1;
+    margin: 0 0 8px;
+    letter-spacing: -0.02em;
+  }
+  .starter-card .sub {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 20px;
+  }
+  .starter-card pre {
+    background: rgba(255,255,255,0.04);
+    padding: 16px;
+    border-left: 2px solid var(--accent);
+    font-size: 12.5px;
+    position: relative;
+    z-index: 2;
+  }
+  .starter-card .cmt { color: #a09a8c; }
+  .starter-card .pmt { color: var(--accent); }
+
+  .stack {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .stack-item {
+    border: 1px solid var(--ink);
+    padding: 18px 22px;
+    display: grid;
+    grid-template-columns: 80px 1fr auto;
+    gap: 18px;
+    align-items: center;
+    background: var(--paper);
+    transition: transform 0.15s, background 0.15s;
+  }
+  .stack-item:hover {
+    transform: translateX(4px);
+    background: var(--paper-deep);
+  }
+  .stack-item .role {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+  .stack-item .name {
+    font-family: 'Fraunces', serif;
+    font-weight: 700;
+    font-size: 22px;
+    letter-spacing: -0.01em;
+  }
+  .stack-item .why {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    text-align: right;
+  }
+
+  /* ── TRAPS ───────────────────────────────────────── */
+  .traps {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+  }
+  .trap {
+    border: 1px solid var(--ink);
+    padding: 24px;
+    background: var(--paper);
+    position: relative;
+  }
+  .trap .num {
+    position: absolute;
+    top: -14px;
+    left: 18px;
+    background: var(--paper);
+    padding: 0 10px;
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--accent);
+  }
+  .trap h4 {
+    font-family: 'Fraunces', serif;
+    font-weight: 700;
+    font-size: 22px;
+    line-height: 1.1;
+    margin: 0 0 10px;
+    letter-spacing: -0.01em;
+  }
+  .trap p {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--ink-soft);
+  }
+  .trap p code {
+    background: var(--highlight);
+    padding: 1px 5px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink);
+  }
+
+  /* ── PROJECT IDEAS ────────────────────────────────── */
+  .projects {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 0;
+    border: 1px solid var(--ink);
+  }
+  .project {
+    padding: 28px 24px;
+    border-right: 1px solid var(--ink);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .project:last-child { border-right: none; }
+  .project .level {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .project h4 {
+    font-family: 'Fraunces', serif;
+    font-weight: 700;
+    font-size: 26px;
+    line-height: 1;
+    margin: 0;
+    letter-spacing: -0.02em;
+  }
+  .project p {
+    margin: 0;
+    font-size: 14px;
+    color: var(--ink-soft);
+    line-height: 1.5;
+  }
+  .project .uses {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink);
+    margin-top: auto;
+    padding-top: 12px;
+    border-top: 1px dashed var(--ink-soft);
+  }
+
+  .world-col .mini-code {
+    margin-top: 12px;
+    background: #1e1c19;
+    padding: 12px 14px;
+    border-left: 2px solid currentColor;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    line-height: 1.55;
+    color: #e8e2d4;
+    overflow-x: auto;
+  }
+  .world-col .mini-code .cmt { color: #6f6a5e; font-style: italic; }
+  .world-col .mini-code .k   { color: #ff8a65; }
+  .world-col .mini-code .s   { color: #d8c87a; }
+  .world-col .mini-code .fn  { color: #9ecbff; }
+  .world-col .mini-code .ty  { color: #c9a0ff; }
+  .world-col .mini-code pre {
+    margin: 0;
+    font-size: inherit;
+    line-height: inherit;
+    color: inherit;
+    white-space: pre;
+  }
+  .world-col .callout {
+    margin-top: 12px;
+    padding: 10px 12px;
+    background: var(--highlight);
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 13.5px;
+    line-height: 1.45;
+    color: var(--ink);
+    border-left: 3px solid var(--ink);
+  }
+  .world-col .callout b { font-style: normal; font-weight: 700; }
+
+  /* ── TWO WORLDS ───────────────────────────────────── */
+  .worlds-intro {
+    font-family: 'Fraunces', serif;
+    font-size: 19px;
+    line-height: 1.55;
+    color: var(--ink-soft);
+    max-width: 62ch;
+    margin: 0 0 40px;
+  }
+  .worlds-intro b { color: var(--ink); font-weight: 700; }
+
+  .world-row {
+    display: grid;
+    grid-template-columns: 200px 1fr 1fr;
+    border-top: 1px solid var(--ink);
+    min-height: 180px;
+  }
+  .world-row:last-of-type {
+    border-bottom: 1px solid var(--ink);
+  }
+  .world-topic {
+    padding: 26px 22px;
+    border-right: 1px solid var(--ink);
+    background: var(--paper-deep);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .world-topic .tnum {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    color: var(--accent);
+  }
+  .world-topic .tname {
+    font-family: 'Fraunces', serif;
+    font-weight: 700;
+    font-style: italic;
+    font-size: 28px;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    margin-top: 18px;
+  }
+
+  .world-col {
+    padding: 26px 24px;
+    border-right: 1px solid var(--ink);
+    position: relative;
+  }
+  .world-col:last-child { border-right: none; }
+  .world-col .badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 9px;
+    border: 1px solid currentColor;
+  }
+  .world-col.node .badge { color: var(--ts); }
+  .world-col.py   .badge { color: var(--py); }
+  .world-col p {
+    margin: 0 0 10px;
+    font-size: 14.5px;
+    line-height: 1.55;
+    color: var(--ink);
+  }
+  .world-col p b { color: var(--ink); font-weight: 600; }
+  .world-col p code,
+  .world-col ul code {
+    background: rgba(24,22,19,0.07);
+    padding: 1px 5px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    color: var(--ink);
+  }
+  .world-col ul {
+    margin: 0;
+    padding: 0 0 0 16px;
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--ink-soft);
+  }
+  .world-col ul li { margin-bottom: 4px; }
+
+  .world-takeaway {
+    margin-top: 32px;
+    padding: 22px 26px;
+    background: var(--ink);
+    color: var(--paper);
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 22px;
+    align-items: center;
+  }
+  .world-takeaway .label-tk {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    white-space: nowrap;
+  }
+  .world-takeaway .text-tk {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 19px;
+    line-height: 1.4;
+  }
+
+  @media (max-width: 900px) {
+    .world-row { grid-template-columns: 1fr; }
+    .world-topic { border-right: none; border-bottom: 1px solid var(--ink); }
+    .world-col { border-right: none; border-bottom: 1px solid var(--ink); }
+    .world-col:last-child { border-bottom: none; }
+    .world-takeaway { grid-template-columns: 1fr; gap: 8px; }
+  }
+
+  /* ── WEEK DETAIL ─────────────────────────────────── */
+  .week-detail {
+    border-top: 1px solid var(--ink);
+    padding: 56px 0;
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 56px;
+  }
+  .week-detail:first-of-type { border-top: none; padding-top: 8px; }
+  .week-detail:last-of-type { padding-bottom: 8px; }
+
+  .week-side {
+    position: sticky;
+    top: 32px;
+    align-self: start;
+  }
+  .week-side .stamp {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 12px;
+  }
+  .week-side .big {
+    font-family: 'Fraunces', serif;
+    font-weight: 900;
+    font-style: italic;
+    font-size: 120px;
+    line-height: 0.85;
+    letter-spacing: -0.05em;
+    color: var(--ink);
+    margin-bottom: 8px;
+  }
+  .week-side .name-large {
+    font-family: 'Fraunces', serif;
+    font-weight: 700;
+    font-size: 36px;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    margin-bottom: 16px;
+  }
+  .week-side .mission {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 16px;
+    line-height: 1.45;
+    color: var(--ink-soft);
+    padding-top: 14px;
+    border-top: 1px solid var(--ink);
+  }
+  .week-side .deliverable {
+    margin-top: 18px;
+    padding: 14px 0 0;
+    border-top: 1px dashed var(--ink-soft);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+  .week-side .deliverable b {
+    display: block;
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 15px;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--ink);
+    margin-top: 4px;
+    font-weight: 500;
+  }
+
+  .week-body {
+    display: flex;
+    flex-direction: column;
+    gap: 36px;
+  }
+  .step {
+    display: grid;
+    grid-template-columns: 36px 1fr;
+    gap: 18px;
+  }
+  .step .step-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    padding-top: 4px;
+    border-top: 2px solid var(--accent);
+  }
+  .step h4 {
+    font-family: 'Fraunces', serif;
+    font-weight: 700;
+    font-size: 24px;
+    line-height: 1.1;
+    letter-spacing: -0.01em;
+    margin: 0 0 8px;
+  }
+  .step h4 .ts-hint {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--ts);
+    letter-spacing: 0.04em;
+    margin-left: 10px;
+    vertical-align: 4px;
+  }
+  .step p {
+    margin: 0 0 12px;
+    font-size: 15px;
+    line-height: 1.55;
+    color: var(--ink-soft);
+  }
+  .step p b { color: var(--ink); }
+  .step p code, .step ul code {
+    background: var(--highlight);
+    padding: 1px 5px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    color: var(--ink);
+  }
+  .step ul {
+    margin: 0 0 12px;
+    padding: 0 0 0 18px;
+    font-size: 14.5px;
+    line-height: 1.6;
+    color: var(--ink-soft);
+  }
+  .step ul li { margin-bottom: 4px; }
+
+  .snippet {
+    background: #1e1c19;
+    padding: 16px 18px;
+    margin-top: 4px;
+    border-left: 3px solid var(--accent);
+  }
+  .snippet .snippet-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #7cd99a;
+    margin-bottom: 8px;
+  }
+  .snippet pre {
+    font-size: 12.5px;
+    line-height: 1.6;
+  }
+  .snippet .cmt { color: #6f6a5e; font-style: italic; }
+  .snippet .pmt { color: var(--accent); }
+
+  @media (max-width: 900px) {
+    .week-detail { grid-template-columns: 1fr; gap: 28px; padding: 40px 0; }
+    .week-side { position: static; }
+    .week-side .big { font-size: 80px; }
+  }
+
+  /* ── COLOPHON ────────────────────────────────────── */
+  .colophon {
+    padding-top: 56px;
+    display: flex;
+    justify-content: space-between;
+    align-items: end;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+  .colophon .sig {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-weight: 500;
+    font-size: 42px;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    text-transform: none;
+  }
+
+  /* ── RESPONSIVE ───────────────────────────────────── */
+  @media (max-width: 900px) {
+    .hero { grid-template-columns: 1fr; gap: 24px; }
+    .roadmap { grid-template-columns: 1fr 1fr; }
+    .week:nth-child(2) { border-right: none; }
+    .week:nth-child(1), .week:nth-child(2) { border-bottom: 1px solid var(--ink); }
+    .compare { grid-template-columns: 1fr; }
+    .starter { grid-template-columns: 1fr; }
+    .traps { grid-template-columns: 1fr; }
+    .projects { grid-template-columns: 1fr; }
+    .project { border-right: none; border-bottom: 1px solid var(--ink); }
+    .project:last-child { border-bottom: none; }
+    .map-head, .map-row { grid-template-columns: 1fr 1fr; }
+    .map-row .note { grid-column: 1 / -1; padding-top: 8px; }
+    .colophon { flex-direction: column; align-items: start; gap: 16px; }
+  }
+
+  /* ── HOME NAV ─────────────────────────────────────── */
+  .home-nav {
+    position: fixed;
+    top: 14px;
+    left: 16px;
+    z-index: 200;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border: 1px solid var(--ink);
+    background: var(--paper);
+    opacity: 0.72;
+    transition: opacity 0.2s, transform 0.2s;
+  }
+  .home-nav:hover { opacity: 1; transform: translateY(-1px); }
+
+  /* ── SURVIVAL SYNTAX ──────────────────────────────── */
+  .syntax {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+  .syn {
+    border: 1px solid var(--ink);
+    padding: 24px;
+    background: var(--paper);
+    display: flex;
+    flex-direction: column;
+  }
+  .syn h4 {
+    font-family: 'Fraunces', serif;
+    font-weight: 700;
+    font-size: 22px;
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+    margin: 0 0 6px;
+  }
+  .syn .js-hint {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--ts);
+    letter-spacing: 0.04em;
+    margin-left: 8px;
+    white-space: nowrap;
+  }
+  .syn p {
+    margin: 0 0 14px;
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--ink-soft);
+  }
+  .syn p code {
+    background: var(--highlight);
+    padding: 1px 5px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink);
+  }
+  .syn .snippet { margin-top: auto; }
+  @media (max-width: 900px) {
+    .syntax { grid-template-columns: 1fr; }
+    .syn .js-hint { display: block; margin-left: 0; margin-top: 4px; }
+  }
+</style>
+</head>
+<body>
+
+<a href="../../" class="home-nav" title="Home" aria-label="Back to all guides"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12l9-9 9 9"/><path d="M5 10v10a1 1 0 001 1h3v-6h6v6h3a1 1 0 001-1V10"/></svg></a>
+
+<div class="wrap">
+
+  <!-- MASTHEAD -->
+  <header class="masthead">
+    <div><span class="dot"></span>The Migrant&apos;s Field Guide · Vol. 01</div>
+    <div>Issue №26 · For the TS-Fluent</div>
+  </header>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div>
+      <h1>From&nbsp;TS<br><span class="arrow">→</span>&nbsp;<span class="py">Python</span></h1>
+    </div>
+    <div class="hero-meta">
+      <p>// A Practical Crossing</p>
+      <p>// Est. read · 6 min</p>
+      <p>// Est. fluency · 3–6 wks</p>
+      <p class="lede">You already know how to think in code. This is just learning to speak with a different accent — and a few new manners.</p>
+    </div>
+  </section>
+
+  <!-- TWO WORLDS -->
+  <section class="section">
+    <div class="section-tag">Part One · Two Worlds</div>
+    <h2>Why Python <em>feels different</em>.</h2>
+    <p class="worlds-intro">Before the syntax, the model. Node.js and Python solve the same problems through fundamentally different architectures — and confusing those architectures is what makes Python feel "weird" to a Node developer. <b>Twelve real differences</b>, with the code that shows them. Read this once and the rest of the guide will click.</p>
+
+    <!-- Row 1: Runtime architecture -->
+    <div class="world-row">
+      <div class="world-topic">
+        <div class="tnum">01 / 12</div>
+        <div class="tname">Runtime Architecture</div>
+      </div>
+      <div class="world-col node">
+        <div class="badge">▲ Node.js</div>
+        <p><b>V8 + libuv + a single-threaded event loop.</b> V8 (the same engine as Chrome) executes your JavaScript. libuv (written in C) manages the event loop, thread pool for file I/O, and OS-level async primitives (epoll on Linux, kqueue on macOS, IOCP on Windows).</p>
+        <p>Your code runs on <i>one</i> main thread. I/O is offloaded to libuv's thread pool or kernel async APIs, and results come back as events on the loop. This is why Node feels fast for I/O — you never block waiting for a socket.</p>
+        <div class="callout"><b>Mental model:</b> a restaurant with one waiter who takes everyone's order, then circles back when each meal is ready.</div>
+      </div>
+      <div class="world-col py">
+        <div class="badge">● Python</div>
+        <p><b>CPython is a stack-based bytecode interpreter</b> with no built-in event loop. Your <code>.py</code> file compiles to bytecode (<code>.pyc</code>), and the interpreter executes it instruction by instruction on the main thread.</p>
+        <p>There's no libuv equivalent baked in. <code>asyncio</code> is a <i>library</i> that adds an event loop on top — you opt into it. Most Python code is synchronous and blocking, and that's the dominant style outside of web servers.</p>
+        <div class="callout"><b>Mental model:</b> a kitchen where you can choose: one cook doing things in order, multiple cooks (threads), or multiple full kitchens (processes).</div>
+      </div>
+    </div>
+
+    <!-- Row 2: Default execution model -->
+    <div class="world-row">
+      <div class="world-topic">
+        <div class="tnum">02 / 12</div>
+        <div class="tname">Default Execution</div>
+      </div>
+      <div class="world-col node">
+        <div class="badge">▲ Node.js</div>
+        <p>Async is the default. Even reading a tiny file is non-blocking. Synchronous APIs exist (<code>fs.readFileSync</code>) but using them in production is a code smell — they freeze the entire event loop.</p>
+        <div class="mini-code">
+<pre><span class="cmt">// node — non-blocking by default</span>
+<span class="k">const</span> data = <span class="k">await</span> fs.readFile(<span class="s">"a.txt"</span>);
+<span class="k">const</span> res  = <span class="k">await</span> fetch(<span class="s">"https://api.x"</span>);
+<span class="cmt">// these two can interleave with other work</span></pre>
+        </div>
+      </div>
+      <div class="world-col py">
+        <div class="badge">● Python</div>
+        <p>Sync is the default. <code>open(path).read()</code> blocks the thread until done — and that's <i>fine</i> for most scripts, CLIs, data jobs, and batch work. Async is for when you need concurrency.</p>
+        <div class="mini-code">
+<pre><span class="cmt"># python — sync by default</span>
+data = Path(<span class="s">"a.txt"</span>).read_text()
+res  = httpx.get(<span class="s">"https://api.x"</span>)
+<span class="cmt"># these run one after another, blocking</span>
+
+<span class="cmt"># to get Node-style concurrency, opt in:</span>
+<span class="k">async with</span> httpx.AsyncClient() <span class="k">as</span> c:
+    res = <span class="k">await</span> c.get(<span class="s">"https://api.x"</span>)</pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- Row 3: Concurrency models -->
+    <div class="world-row">
+      <div class="world-topic">
+        <div class="tnum">03 / 12</div>
+        <div class="tname">Concurrency Models</div>
+      </div>
+      <div class="world-col node">
+        <div class="badge">▲ Node.js</div>
+        <p><b>One primary model:</b> event-loop concurrency with async/await. For CPU work, you reach for <code>worker_threads</code> (shared memory possible via <code>SharedArrayBuffer</code>) or <code>cluster</code> (multiple processes). The 95% case is just async functions.</p>
+        <ul>
+          <li>1k concurrent HTTP requests? Trivial, single process.</li>
+          <li>Heavy CPU? Workers or external services.</li>
+          <li>Scale out? <code>cluster</code> or PM2, one process per core.</li>
+        </ul>
+      </div>
+      <div class="world-col py">
+        <div class="badge">● Python</div>
+        <p><b>Three real models, and you need to know which to use:</b></p>
+        <ul>
+          <li><b>asyncio</b> — for I/O concurrency in async code (<code>await</code> on many tasks)</li>
+          <li><b>threading</b> — for blocking I/O in sync code (DB drivers, legacy libs)</li>
+          <li><b>multiprocessing</b> — for CPU-bound work, true OS-level parallelism</li>
+        </ul>
+        <p>There's also <code>concurrent.futures</code>, a unified API over threads and processes that's often the friendliest entry point.</p>
+      </div>
+    </div>
+
+    <!-- Row 4: GIL -->
+    <div class="world-row">
+      <div class="world-topic">
+        <div class="tnum">04 / 12</div>
+        <div class="tname">The GIL</div>
+      </div>
+      <div class="world-col node">
+        <div class="badge">▲ Node.js</div>
+        <p>No GIL. V8 doesn't share JS objects between worker threads — communication is via message passing (or <code>SharedArrayBuffer</code> for raw bytes). Different model, no equivalent problem.</p>
+        <p>If you want CPU parallelism, you spawn workers or cluster processes. Done.</p>
+      </div>
+      <div class="world-col py">
+        <div class="badge">● Python</div>
+        <p><b>The Global Interpreter Lock: only one thread executes Python bytecode at a time</b>, even on a 16-core CPU. It's a CPython implementation detail dating back to the '90s, kept for C-extension safety and single-threaded speed.</p>
+        <p>The consequences:</p>
+        <ul>
+          <li>10 threads crunching numbers → <i>slower</i> than 1, due to lock contention</li>
+          <li>10 threads doing I/O → fine, GIL is released during I/O calls</li>
+          <li>Need real CPU parallelism? Use <code>multiprocessing</code>, drop into C (numpy, polars), or use <code>asyncio</code> for I/O</li>
+        </ul>
+        <div class="callout"><b>The future:</b> 3.13 (Oct 2024) introduced an experimental free-threaded build; 3.14 (Oct 2025) made it an <i>officially supported</i> build (PEP 779). It&apos;s still opt-in — the GIL is on by default and most of the ecosystem assumes it. Today, plan around it.</div>
+      </div>
+    </div>
+
+    <!-- Row 5: Type system -->
+    <div class="world-row">
+      <div class="world-topic">
+        <div class="tnum">05 / 12</div>
+        <div class="tname">Type System</div>
+      </div>
+      <div class="world-col node">
+        <div class="badge">▲ Node.js + TS</div>
+        <p>TypeScript is a <b>separate compile step</b>. You write <code>.ts</code>, <code>tsc</code> transpiles to <code>.js</code>, types are erased at runtime. Modern runners (tsx, ts-node, bun, deno) hide the step but it's still happening.</p>
+        <p>Runtime validation needs a separate tool: <code>zod</code>, <code>valibot</code>, <code>io-ts</code>. You write the shape <i>twice</i> unless you derive one from the other.</p>
+        <div class="mini-code">
+<pre><span class="cmt">// shape defined twice</span>
+<span class="k">const</span> <span class="ty">UserSchema</span> = z.object({
+  name: z.string(),
+  age:  z.number()
+});
+<span class="k">type</span> <span class="ty">User</span> = z.infer&lt;<span class="k">typeof</span> UserSchema&gt;;</pre>
+        </div>
+      </div>
+      <div class="world-col py">
+        <div class="badge">● Python</div>
+        <p>Types are <b>part of the language</b> (PEP 484, since 2014). No compile step — they're syntax in the <code>.py</code> file itself, ignored at runtime. <code>pyright</code> or <code>mypy</code> checks them statically.</p>
+        <p>Pydantic uses those <i>same</i> hints for runtime validation. One source of truth, two roles. This is genuinely better than the TS+Zod split.</p>
+        <div class="mini-code">
+<pre><span class="cmt"># shape defined once, used for both</span>
+<span class="k">class</span> <span class="ty">User</span>(BaseModel):
+    name: <span class="ty">str</span>
+    age:  <span class="ty">int</span>
+
+<span class="cmt"># pyright validates at edit-time,</span>
+<span class="cmt"># pydantic validates at runtime</span></pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- Row 6: Memory & GC -->
+    <div class="world-row">
+      <div class="world-topic">
+        <div class="tnum">06 / 12</div>
+        <div class="tname">Memory &amp; GC</div>
+      </div>
+      <div class="world-col node">
+        <div class="badge">▲ Node.js</div>
+        <p><b>V8 generational garbage collector</b> — young/old heaps, mark-sweep, mark-compact. Highly tuned for short-lived web workloads. Default heap is ~1.7GB, tune with <code>--max-old-space-size</code>.</p>
+        <p>You'll rarely think about it until you hit OOM in a long-running process. Profile with Chrome DevTools or <code>--inspect</code>.</p>
+      </div>
+      <div class="world-col py">
+        <div class="badge">● Python</div>
+        <p><b>Reference counting + cycle-collecting GC.</b> Most objects die the moment their refcount hits zero — deterministic, predictable, no GC pauses for the common case. A cycle collector runs periodically for circular references.</p>
+        <p>Two practical implications:</p>
+        <ul>
+          <li>Context managers (<code>with</code>) feel natural because cleanup <i>is</i> immediate</li>
+          <li>Memory profile is steadier; fewer GC-pause surprises</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Row 7: Package management -->
+    <div class="world-row">
+      <div class="world-topic">
+        <div class="tnum">07 / 12</div>
+        <div class="tname">Packages &amp; Deps</div>
+      </div>
+      <div class="world-col node">
+        <div class="badge">▲ Node.js</div>
+        <p><b>npm/pnpm/yarn + <code>node_modules</code>.</b> Per-project dependency tree on disk. <code>package.json</code> for declared deps, <code>package-lock.json</code> for resolved versions. Tooling is mature; bun and pnpm are fast.</p>
+        <p>Reality check: a typical Node project pulls <b>500–2000 transitive dependencies</b>. Supply-chain risk is real (left-pad, event-stream, etc.).</p>
+      </div>
+      <div class="world-col py">
+        <div class="badge">● Python</div>
+        <p><b>Virtual environments + <code>pyproject.toml</code>.</b> Each project gets its own isolated Python environment (<code>.venv</code>). Historically fragmented (pip, pipenv, poetry, conda). Today: <b>uv</b> wins — Rust-based, ~10× faster than pip, handles Python versions too.</p>
+        <p>A typical Python project pulls <b>20–80 transitive deps</b>. Smaller blast radius. The trade-off: you'll occasionally need a C compiler for native extensions (rare with modern wheels).</p>
+        <div class="callout"><b>The shift to internalize:</b> there is no global install. Always work inside a venv. <code>uv run</code> handles it for you.</div>
+      </div>
+    </div>
+
+    <!-- Row 8: Standard library -->
+    <div class="world-row">
+      <div class="world-topic">
+        <div class="tnum">08 / 12</div>
+        <div class="tname">Standard Library</div>
+      </div>
+      <div class="world-col node">
+        <div class="badge">▲ Node.js</div>
+        <p><b>Lean stdlib, vibrant npm.</b> Built-ins: <code>fs</code>, <code>http</code>, <code>crypto</code>, <code>path</code>, <code>stream</code>, <code>events</code>, <code>util</code>, plus newer <code>node:test</code> and <code>fetch</code>. Anything beyond is npm.</p>
+        <p>You install packages for date formatting (date-fns), UUIDs (uuid), deep equality (lodash), even <code>is-odd</code> (yes, really).</p>
+      </div>
+      <div class="world-col py">
+        <div class="badge">● Python</div>
+        <p><b>"Batteries included" is real.</b> The stdlib is enormous and high quality. You can build full applications with zero external deps.</p>
+        <ul>
+          <li>HTTP server + client: <code>http.server</code>, <code>urllib</code></li>
+          <li>SQLite, JSON, CSV, XML, ZIP, tar — all built-in</li>
+          <li>Dates, UUIDs, hashing, regex, statistics</li>
+          <li>Argument parsing (<code>argparse</code>), logging, threading, multiprocessing</li>
+          <li>Testing (<code>unittest</code>), profiling (<code>cProfile</code>), debugging (<code>pdb</code>)</li>
+        </ul>
+        <p>The first reflex of a Python dev is to check the stdlib. Often it's already there.</p>
+      </div>
+    </div>
+
+    <!-- Row 9: Error handling & nullability -->
+    <div class="world-row">
+      <div class="world-topic">
+        <div class="tnum">09 / 12</div>
+        <div class="tname">Errors &amp; Nullability</div>
+      </div>
+      <div class="world-col node">
+        <div class="badge">▲ Node.js</div>
+        <p>Two flavors of "missing": <code>null</code> (intentional) and <code>undefined</code> (uninitialized). TS treats them as distinct types. Errors are objects, often subclassed (<code>TypeError</code>, custom classes).</p>
+        <p>Async errors propagate through promise rejection; unhandled rejections crash the process by default in modern Node.</p>
+        <div class="mini-code">
+<pre>x?.y?.z          <span class="cmt">// optional chaining</span>
+x ?? <span class="s">"default"</span>    <span class="cmt">// nullish coalescing</span>
+<span class="k">throw new</span> <span class="ty">Error</span>(<span class="s">"bad"</span>);</pre>
+        </div>
+      </div>
+      <div class="world-col py">
+        <div class="badge">● Python</div>
+        <p>One value: <code>None</code>. That's it. Type hints use <code>str | None</code> (or <code>Optional[str]</code>). Exceptions are first-class objects with a rich hierarchy.</p>
+        <p>Idioms differ: Python prefers <b>EAFP</b> ("easier to ask forgiveness than permission") — try the operation, catch the exception. JS tends toward <b>LBYL</b> ("look before you leap") — check first, then act.</p>
+        <div class="mini-code">
+<pre><span class="k">try</span>:
+    val = data[<span class="s">"key"</span>]
+<span class="k">except</span> KeyError:
+    val = <span class="s">"default"</span>
+
+<span class="cmt"># or, the .get() shorthand:</span>
+val = data.get(<span class="s">"key"</span>, <span class="s">"default"</span>)</pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- Row 10: Web frameworks -->
+    <div class="world-row">
+      <div class="world-topic">
+        <div class="tnum">10 / 12</div>
+        <div class="tname">Web Frameworks</div>
+      </div>
+      <div class="world-col node">
+        <div class="badge">▲ Node.js</div>
+        <p><b>Express</b> remains the lingua franca (minimal, middleware-based). <b>Fastify</b> for performance and JSON-schema validation. <b>NestJS</b> for opinionated, Angular-style DI. <b>Hono</b> for edge runtimes. Full-stack: Next.js, Remix, SvelteKit.</p>
+        <p>All work the same way under the hood: middleware chain over the event loop.</p>
+      </div>
+      <div class="world-col py">
+        <div class="badge">● Python</div>
+        <p>Three real choices, picked by use case:</p>
+        <ul>
+          <li><b>FastAPI</b> — modern, async, type-driven, auto OpenAPI docs. The default pick for new APIs.</li>
+          <li><b>Django</b> — "batteries included" full-stack: ORM, admin, auth, migrations. Like Rails for Python.</li>
+          <li><b>Flask</b> — minimal, sync, Express-equivalent. Still everywhere.</li>
+        </ul>
+        <p>FastAPI ↔ Express analogies are surface-level; FastAPI is much closer to <b>tRPC + Zod + Express</b> in spirit.</p>
+      </div>
+    </div>
+
+    <!-- Row 11: Production deployment -->
+    <div class="world-row">
+      <div class="world-topic">
+        <div class="tnum">11 / 12</div>
+        <div class="tname">Production Deploy</div>
+      </div>
+      <div class="world-col node">
+        <div class="badge">▲ Node.js</div>
+        <p><b>One <code>node</code> binary, deploy anywhere.</b> Single process is often enough because the event loop saturates I/O easily. Scale via PM2, cluster mode, or just multiple containers behind a load balancer.</p>
+        <p>Edge-first hosting (Vercel, Cloudflare Workers, Fly) is mature. Cold starts measured in milliseconds.</p>
+      </div>
+      <div class="world-col py">
+        <div class="badge">● Python</div>
+        <p><b>You don't run <code>python app.py</code> in production.</b> You run a dedicated server process:</p>
+        <ul>
+          <li><b>uvicorn</b> — ASGI (async) server, used with FastAPI</li>
+          <li><b>gunicorn</b> — WSGI (sync) process manager, used with Flask/Django</li>
+          <li>Typical: <code>gunicorn -w 4 -k uvicorn.workers.UvicornWorker app:app</code> — 4 worker processes to bypass the GIL</li>
+        </ul>
+        <p>Containers (Docker) are the standard packaging. Cold starts are slower than Node — typically 200ms–1s.</p>
+      </div>
+    </div>
+
+    <!-- Row 12: Where each shines -->
+    <div class="world-row">
+      <div class="world-topic">
+        <div class="tnum">12 / 12</div>
+        <div class="tname">Where Each Shines</div>
+      </div>
+      <div class="world-col node">
+        <div class="badge">▲ Node.js</div>
+        <p><b>Real-time I/O, streaming, WebSockets, edge functions.</b> The single-language full-stack story (TS on client and server, shared types) is a genuine advantage.</p>
+        <ul>
+          <li>API gateways, BFFs, real-time apps</li>
+          <li>SSR/SSG frameworks (Next, Remix, Astro)</li>
+          <li>Edge compute and serverless functions</li>
+          <li>CLI tools shared with the frontend toolchain</li>
+        </ul>
+      </div>
+      <div class="world-col py">
+        <div class="badge">● Python</div>
+        <p><b>Data, ML, AI, scientific computing, automation, scripting.</b> The scientific stack (numpy, pandas, polars, scipy, scikit-learn, PyTorch, JAX) has no equivalent anywhere else.</p>
+        <ul>
+          <li>ML/AI training and inference (PyTorch, transformers)</li>
+          <li>Data engineering and ETL (Airflow, dbt-core, Dagster)</li>
+          <li>Notebooks and analytics (Jupyter, Polars, DuckDB)</li>
+          <li>DevOps tooling (Ansible, SaltStack), web scraping (Scrapy)</li>
+          <li>"Glue code" between systems — Python's eternal sweet spot</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="world-takeaway">
+      <div class="label-tk">— The takeaway —</div>
+      <div class="text-tk">Node is "one process, one loop, everything async, npm for everything." Python is "many models to choose from, sync by default, batteries included, pick the right concurrency tool for the job." Once that mental model settles, the rest is syntax — and you already know how to learn syntax.</div>
+    </div>
+  </section>
+
+  <!-- ROADMAP -->
+  <section class="section">
+    <div class="section-tag">Part Two · The Map</div>
+    <h2>A four-week <em>crossing</em>.</h2>
+    <div class="roadmap">
+      <div class="week">
+        <span class="corner">w/01</span>
+        <div class="week-num"><em>Week One</em></div>
+        <div class="week-title">Footing</div>
+        <ul class="week-list">
+          <li>Install <b>uv</b>, learn venvs</li>
+          <li>Syntax: indent, snake_case</li>
+          <li>str / int / list / dict / tuple</li>
+          <li>Comprehensions</li>
+          <li>Write a CLI script you&apos;d normally write in Node</li>
+        </ul>
+      </div>
+      <div class="week">
+        <span class="corner">w/02</span>
+        <div class="week-num"><em>Week Two</em></div>
+        <div class="week-title">Shape</div>
+        <ul class="week-list">
+          <li>Type hints + pyright</li>
+          <li>Dataclasses &amp; Pydantic</li>
+          <li>Functions, *args, **kwargs</li>
+          <li>Modules &amp; imports</li>
+          <li>pytest basics</li>
+        </ul>
+      </div>
+      <div class="week">
+        <span class="corner">w/03</span>
+        <div class="week-num"><em>Week Three</em></div>
+        <div class="week-title">Idiom</div>
+        <ul class="week-list">
+          <li>Context managers (<code>with</code>)</li>
+          <li>Generators &amp; iterators</li>
+          <li>Decorators</li>
+          <li>Standard library tour</li>
+          <li>Build a FastAPI service</li>
+        </ul>
+      </div>
+      <div class="week">
+        <span class="corner">w/04</span>
+        <div class="week-num"><em>Week Four</em></div>
+        <div class="week-title">Depth</div>
+        <ul class="week-list">
+          <li>async / await with httpx</li>
+          <li>The GIL &amp; concurrency</li>
+          <li>Dunder methods (<code>__x__</code>)</li>
+          <li>Packaging your project</li>
+          <li>Ship something real</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- WEEK-BY-WEEK DETAIL -->
+  <section class="section">
+    <div class="section-tag">Part Three · The Plan, Unpacked</div>
+    <h2>Day-to-day, <em>step by step</em>.</h2>
+
+    <!-- WEEK 1 -->
+    <div class="week-detail">
+      <aside class="week-side">
+        <div class="stamp">— Week One —</div>
+        <div class="big">01</div>
+        <div class="name-large">Footing</div>
+        <div class="mission">"Stop fighting the syntax. Start thinking in Python data structures."</div>
+        <div class="deliverable">By Sunday, you ship:<b>A small CLI tool that reads a file and prints a summary.</b></div>
+      </aside>
+
+      <div class="week-body">
+
+        <div class="step">
+          <div class="step-num">01</div>
+          <div>
+            <h4>Install uv and make a project <span class="ts-hint">// like npm init, but faster</span></h4>
+            <p>One install gets you Python, virtual envs, and a package manager. Forget the pip/poetry/pyenv discourse — <b>uv</b> replaces all of it.</p>
+            <div class="snippet">
+              <div class="snippet-label">// terminal</div>
+<pre><span class="cmt"># install (mac/linux)</span>
+<span class="pmt">$</span> curl -LsSf https://astral.sh/uv/install.sh | sh
+
+<span class="cmt"># new project, like `npm init`</span>
+<span class="pmt">$</span> uv init learn-python &amp;&amp; cd learn-python
+<span class="pmt">$</span> uv run python --version</pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">02</div>
+          <div>
+            <h4>Learn the syntax shifts that bite <span class="ts-hint">// indent matters now</span></h4>
+            <p>The first week you&apos;ll write semicolons by accident. That&apos;s fine. What actually matters:</p>
+            <ul>
+              <li><b>Indentation is syntax</b> — not style. Four spaces, always.</li>
+              <li><b>snake_case</b> for variables and functions, <b>PascalCase</b> for classes.</li>
+              <li><code>None</code>, <code>True</code>, <code>False</code> are capitalized. <code>null</code> doesn&apos;t exist.</li>
+              <li><code>and</code> / <code>or</code> / <code>not</code> instead of <code>&amp;&amp;</code> / <code>||</code> / <code>!</code>.</li>
+              <li>No <code>++</code>. Use <code>i += 1</code>.</li>
+            </ul>
+            <div class="snippet">
+              <div class="snippet-label">// hello.py</div>
+<pre><span class="cmt"># no braces, no semicolons</span>
+<span class="k">def</span> <span class="fn">greet</span>(name: <span class="ty">str</span>) -&gt; <span class="ty">str</span>:
+    <span class="k">if</span> name <span class="k">and not</span> name.isspace():
+        <span class="k">return</span> <span class="s">f"hi, {name}"</span>
+    <span class="k">return</span> <span class="s">"hi, stranger"</span></pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">03</div>
+          <div>
+            <h4>Master the four core types <span class="ts-hint">// list, dict, tuple, set</span></h4>
+            <p>These four cover 95% of data work. <b>list</b> ≈ array, <b>dict</b> ≈ object/Map, <b>tuple</b> is an immutable list, <b>set</b> is what you wish JS had built-in.</p>
+            <div class="snippet">
+              <div class="snippet-label">// the four horsemen</div>
+<pre>nums   = [1, 2, 3]              <span class="cmt"># list (mutable)</span>
+user   = {<span class="s">"name"</span>: <span class="s">"ada"</span>, <span class="s">"age"</span>: 30} <span class="cmt"># dict</span>
+point  = (10, 20)               <span class="cmt"># tuple (immutable)</span>
+seen   = {<span class="s">"a"</span>, <span class="s">"b"</span>, <span class="s">"c"</span>}         <span class="cmt"># set, O(1) lookup</span>
+
+<span class="cmt"># access is uniform and lovely</span>
+user[<span class="s">"name"</span>]        <span class="cmt"># "ada"</span>
+nums.append(4)
+<span class="s">"a"</span> <span class="k">in</span> seen        <span class="cmt"># True</span></pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">04</div>
+          <div>
+            <h4>Fall in love with comprehensions <span class="ts-hint">// .map().filter() but readable</span></h4>
+            <p>The single most Pythonic thing. Once you can read these, you&apos;re halfway to fluent.</p>
+            <div class="snippet">
+              <div class="snippet-label">// the same operation, three ways</div>
+<pre><span class="cmt"># JS/TS muscle memory</span>
+<span class="cmt"># nums.filter(n =&gt; n &gt; 2).map(n =&gt; n * 2)</span>
+
+<span class="cmt"># Python: do it inline</span>
+doubled = [n * 2 <span class="k">for</span> n <span class="k">in</span> nums <span class="k">if</span> n &gt; 2]
+
+<span class="cmt"># dict comprehension</span>
+sq = {n: n*n <span class="k">for</span> n <span class="k">in</span> <span class="fn">range</span>(5)}
+
+<span class="cmt"># set comprehension</span>
+uniq = {word.lower() <span class="k">for</span> word <span class="k">in</span> text.split()}</pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">05</div>
+          <div>
+            <h4>Ship the week-1 deliverable <span class="ts-hint">// prove the basics stick</span></h4>
+            <p>Write a script that reads a <code>.log</code> file, counts unique IP addresses, and prints the top 5. You&apos;ll touch file I/O, dicts, sorting, and string parsing — exactly the foundation everything else builds on.</p>
+            <div class="snippet">
+              <div class="snippet-label">// the shape of it</div>
+<pre><span class="k">from</span> collections <span class="k">import</span> Counter
+<span class="k">from</span> pathlib <span class="k">import</span> Path
+
+lines = Path(<span class="s">"access.log"</span>).read_text().splitlines()
+ips   = [line.split()[0] <span class="k">for</span> line <span class="k">in</span> lines]
+top   = Counter(ips).most_common(5)
+
+<span class="k">for</span> ip, count <span class="k">in</span> top:
+    <span class="fn">print</span>(<span class="s">f"{ip:&lt;16} {count}"</span>)</pre>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- WEEK 2 -->
+    <div class="week-detail">
+      <aside class="week-side">
+        <div class="stamp">— Week Two —</div>
+        <div class="big">02</div>
+        <div class="name-large">Shape</div>
+        <div class="mission">"Make Python feel like the typed language you came from."</div>
+        <div class="deliverable">By Sunday, you ship:<b>A typed module with tests, fully checked by pyright.</b></div>
+      </aside>
+
+      <div class="week-body">
+
+        <div class="step">
+          <div class="step-num">01</div>
+          <div>
+            <h4>Type hints + pyright <span class="ts-hint">// your TS instincts pay off</span></h4>
+            <p>Python types look almost identical to TS. The big shift: <b>they aren&apos;t enforced at runtime</b>. <code>pyright</code> (from Microsoft, same house as TypeScript) checks them in your editor.</p>
+            <div class="snippet">
+              <div class="snippet-label">// types are syntax, not runtime</div>
+<pre><span class="k">from</span> typing <span class="k">import</span> Optional
+
+<span class="k">def</span> <span class="fn">find_user</span>(id: <span class="ty">int</span>) -&gt; <span class="ty">Optional</span>[<span class="ty">str</span>]:
+    <span class="k">return</span> users.get(id)   <span class="cmt"># may be None</span>
+
+<span class="cmt"># newer syntax (3.10+) reads even better:</span>
+<span class="k">def</span> <span class="fn">find_user</span>(id: <span class="ty">int</span>) -&gt; <span class="ty">str</span> | <span class="ty">None</span>:
+    <span class="k">return</span> users.get(id)</pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">02</div>
+          <div>
+            <h4>Dataclasses &amp; Pydantic <span class="ts-hint">// interfaces, but with validation</span></h4>
+            <p>Two flavors of "shape your data." <b>Dataclasses</b> are stdlib, lightweight — like a TS <code>interface</code> with a constructor. <b>Pydantic</b> adds runtime validation — what <code>zod</code> does, deeply integrated.</p>
+            <div class="snippet">
+              <div class="snippet-label">// pick the right tool</div>
+<pre><span class="k">from</span> dataclasses <span class="k">import</span> dataclass
+<span class="k">from</span> pydantic <span class="k">import</span> BaseModel, EmailStr
+
+<span class="cmt"># lightweight, internal data</span>
+<span class="k">@dataclass</span>
+<span class="k">class</span> <span class="ty">Point</span>:
+    x: <span class="ty">float</span>
+    y: <span class="ty">float</span>
+
+<span class="cmt"># external data (API input, JSON, env)</span>
+<span class="k">class</span> <span class="ty">User</span>(BaseModel):
+    name:  <span class="ty">str</span>
+    email: EmailStr           <span class="cmt"># needs pydantic[email]</span>
+    age:   <span class="ty">int</span> = 0           <span class="cmt"># default</span></pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">03</div>
+          <div>
+            <h4>Functions, *args, **kwargs <span class="ts-hint">// spread, but better</span></h4>
+            <p>Python functions have superpowers: keyword arguments, defaults, and variadic collectors. <code>*args</code> collects positional, <code>**kwargs</code> collects keyword.</p>
+            <div class="snippet">
+              <div class="snippet-label">// the full toolkit</div>
+<pre><span class="k">def</span> <span class="fn">connect</span>(
+    host: <span class="ty">str</span>,
+    port: <span class="ty">int</span> = 5432,           <span class="cmt"># default</span>
+    *,                          <span class="cmt"># everything after is kw-only</span>
+    timeout: <span class="ty">float</span> = 10.0,
+    **options                   <span class="cmt"># catch-all kwargs</span>
+):
+    ...
+
+<span class="cmt"># callers can be explicit:</span>
+connect(<span class="s">"db.local"</span>, timeout=5, ssl=<span class="k">True</span>)</pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">04</div>
+          <div>
+            <h4>Modules &amp; imports <span class="ts-hint">// no node_modules</span></h4>
+            <p>Each <code>.py</code> file is a module. Folders become packages. The import rules feel weird at first, then click.</p>
+            <ul>
+              <li><code>from math import sqrt</code> — pull one thing.</li>
+              <li><code>import json</code> — keep the namespace.</li>
+              <li><code>from .utils import helper</code> — relative import inside a package.</li>
+              <li>Run modules with <code>uv run python -m mypackage</code>, not by file path.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">05</div>
+          <div>
+            <h4>pytest basics <span class="ts-hint">// jest, with less ceremony</span></h4>
+            <p>No <code>describe</code>, no <code>it</code>. Just functions named <code>test_*</code> with plain <code>assert</code>. That&apos;s it.</p>
+            <div class="snippet">
+              <div class="snippet-label">// test_math.py</div>
+<pre><span class="k">from</span> mymath <span class="k">import</span> add
+
+<span class="k">def</span> <span class="fn">test_add_positives</span>():
+    <span class="k">assert</span> add(2, 3) == 5
+
+<span class="k">def</span> <span class="fn">test_add_with_zero</span>():
+    <span class="k">assert</span> add(0, 7) == 7
+
+<span class="cmt"># run it:</span>
+<span class="cmt"># $ uv run pytest -v</span></pre>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- WEEK 3 -->
+    <div class="week-detail">
+      <aside class="week-side">
+        <div class="stamp">— Week Three —</div>
+        <div class="big">03</div>
+        <div class="name-large">Idiom</div>
+        <div class="mission">"Stop writing Python like TypeScript. Start writing it like Python."</div>
+        <div class="deliverable">By Sunday, you ship:<b>A working FastAPI service with two endpoints and a test suite.</b></div>
+      </aside>
+
+      <div class="week-body">
+
+        <div class="step">
+          <div class="step-num">01</div>
+          <div>
+            <h4>Context managers <span class="ts-hint">// `using`, but everywhere</span></h4>
+            <p>The <code>with</code> block guarantees cleanup. Files, DB connections, locks, HTTP clients — anything with a lifecycle. You&apos;ll use it daily.</p>
+            <div class="snippet">
+              <div class="snippet-label">// resources, handled</div>
+<pre><span class="cmt"># file closes automatically, even on error</span>
+<span class="k">with</span> <span class="fn">open</span>(<span class="s">"data.json"</span>) <span class="k">as</span> f:
+    data = json.load(f)
+
+<span class="cmt"># works with anything that supports it</span>
+<span class="k">with</span> httpx.Client() <span class="k">as</span> client:
+    r = client.get(<span class="s">"https://api.x"</span>)</pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">02</div>
+          <div>
+            <h4>Generators &amp; iterators <span class="ts-hint">// lazy sequences, native</span></h4>
+            <p>JS has generators, but in Python they&apos;re everywhere — and they&apos;re how you process big data without loading it all into memory.</p>
+            <div class="snippet">
+              <div class="snippet-label">// yield, the magic word</div>
+<pre><span class="k">def</span> <span class="fn">read_large_file</span>(path):
+    <span class="k">with</span> <span class="fn">open</span>(path) <span class="k">as</span> f:
+        <span class="k">for</span> line <span class="k">in</span> f:        <span class="cmt"># lazy!</span>
+            <span class="k">yield</span> line.strip()
+
+<span class="cmt"># consumes one line at a time, not the whole file</span>
+<span class="k">for</span> line <span class="k">in</span> read_large_file(<span class="s">"huge.log"</span>):
+    process(line)</pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">03</div>
+          <div>
+            <h4>Decorators <span class="ts-hint">// higher-order functions, sugared</span></h4>
+            <p>That <code>@something</code> above a function? It&apos;s just a function that wraps another function. Once you see it, you&apos;ll see it everywhere — caching, routing, auth, timing.</p>
+            <div class="snippet">
+              <div class="snippet-label">// build one, use one</div>
+<pre><span class="k">from</span> functools <span class="k">import</span> cache
+
+<span class="cmt"># stdlib decorator — instant memoization</span>
+<span class="k">@cache</span>
+<span class="k">def</span> <span class="fn">fib</span>(n):
+    <span class="k">return</span> n <span class="k">if</span> n &lt; 2 <span class="k">else</span> fib(n-1) + fib(n-2)
+
+<span class="cmt"># framework decorator — fastapi routing</span>
+<span class="k">@app</span>.get(<span class="s">"/users/{id}"</span>)
+<span class="k">def</span> <span class="fn">get_user</span>(id: <span class="ty">int</span>):
+    <span class="k">return</span> db.find(id)</pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">04</div>
+          <div>
+            <h4>Tour the standard library <span class="ts-hint">// stop reaching for npm</span></h4>
+            <p>Python&apos;s stdlib is enormous and high-quality. Skim these — you&apos;ll use them constantly:</p>
+            <ul>
+              <li><code>pathlib</code> — modern file paths, kills <code>os.path</code></li>
+              <li><code>collections</code> — <code>Counter</code>, <code>defaultdict</code>, <code>deque</code></li>
+              <li><code>itertools</code> — <code>chain</code>, <code>groupby</code>, <code>pairwise</code></li>
+              <li><code>functools</code> — <code>cache</code>, <code>partial</code>, <code>reduce</code></li>
+              <li><code>datetime</code>, <code>json</code>, <code>re</code>, <code>subprocess</code> — bread and butter</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">05</div>
+          <div>
+            <h4>Build a FastAPI service <span class="ts-hint">// express, but typed end-to-end</span></h4>
+            <p>This is where it all comes together. FastAPI uses your type hints to validate input, serialize output, and generate OpenAPI docs — for free.</p>
+            <div class="snippet">
+              <div class="snippet-label">// main.py — full working API in 15 lines</div>
+<pre><span class="k">from</span> fastapi <span class="k">import</span> FastAPI
+<span class="k">from</span> pydantic <span class="k">import</span> BaseModel
+
+app = FastAPI()
+
+<span class="k">class</span> <span class="ty">Todo</span>(BaseModel):
+    title: <span class="ty">str</span>
+    done:  <span class="ty">bool</span> = <span class="k">False</span>
+
+todos: <span class="ty">list</span>[<span class="ty">Todo</span>] = []
+
+<span class="k">@app</span>.post(<span class="s">"/todos"</span>)
+<span class="k">def</span> <span class="fn">create</span>(todo: <span class="ty">Todo</span>) -&gt; <span class="ty">Todo</span>:
+    todos.append(todo)
+    <span class="k">return</span> todo
+
+<span class="cmt"># setup: uv add "fastapi[standard]"</span>
+<span class="cmt"># run:   uv run fastapi dev main.py</span>
+<span class="cmt"># docs at /docs — auto-generated</span></pre>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- WEEK 4 -->
+    <div class="week-detail">
+      <aside class="week-side">
+        <div class="stamp">— Week Four —</div>
+        <div class="big">04</div>
+        <div class="name-large">Depth</div>
+        <div class="mission">"Now go where Python actually shines."</div>
+        <div class="deliverable">By Sunday, you ship:<b>A real project on GitHub. Packaged, tested, README-d.</b></div>
+      </aside>
+
+      <div class="week-body">
+
+        <div class="step">
+          <div class="step-num">01</div>
+          <div>
+            <h4>async / await with httpx <span class="ts-hint">// finally familiar territory</span></h4>
+            <p>This will feel like home. The syntax is identical to TS. The mental model: in Node, async is the default; in Python, you opt in by writing <code>async def</code> and running inside an event loop.</p>
+            <div class="snippet">
+              <div class="snippet-label">// concurrent fetches</div>
+<pre><span class="k">import</span> asyncio, httpx
+
+<span class="k">async def</span> <span class="fn">fetch</span>(url: <span class="ty">str</span>) -&gt; <span class="ty">dict</span>:
+    <span class="k">async with</span> httpx.AsyncClient() <span class="k">as</span> c:
+        r = <span class="k">await</span> c.get(url)
+        <span class="k">return</span> r.json()
+
+<span class="k">async def</span> <span class="fn">main</span>():
+    <span class="cmt"># like Promise.all</span>
+    results = <span class="k">await</span> asyncio.gather(
+        fetch(<span class="s">"https://api.x/1"</span>),
+        fetch(<span class="s">"https://api.x/2"</span>),
+    )
+
+asyncio.run(main())</pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">02</div>
+          <div>
+            <h4>The GIL &amp; when concurrency models matter <span class="ts-hint">// it&apos;s not just async</span></h4>
+            <p>Python has a Global Interpreter Lock — only one thread runs Python bytecode at a time. Two consequences worth internalizing:</p>
+            <ul>
+              <li><b>I/O-bound work</b> (APIs, DB, files) → use <code>asyncio</code>. The GIL doesn&apos;t block I/O.</li>
+              <li><b>CPU-bound work</b> (number-crunching, image processing) → use <code>multiprocessing</code>, not threads.</li>
+              <li>Or skip the GIL entirely with libraries like <b>numpy</b> and <b>polars</b> that drop into C.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">03</div>
+          <div>
+            <h4>Dunder methods <span class="ts-hint">// operator overloading, but useful</span></h4>
+            <p>Methods named <code>__like_this__</code> hook into Python&apos;s data model. They&apos;re how custom classes become first-class — printable, comparable, iterable.</p>
+            <div class="snippet">
+              <div class="snippet-label">// make a class feel native</div>
+<pre><span class="k">class</span> <span class="ty">Money</span>:
+    <span class="k">def</span> <span class="fn">__init__</span>(self, amount, currency):
+        self.amount = amount
+        self.currency = currency
+
+    <span class="k">def</span> <span class="fn">__repr__</span>(self):       <span class="cmt"># print()</span>
+        <span class="k">return</span> <span class="s">f"{self.amount} {self.currency}"</span>
+
+    <span class="k">def</span> <span class="fn">__add__</span>(self, other):  <span class="cmt"># the + operator</span>
+        <span class="k">return</span> Money(self.amount + other.amount, self.currency)
+
+    <span class="k">def</span> <span class="fn">__eq__</span>(self, other):   <span class="cmt"># the == operator</span>
+        <span class="k">return</span> self.amount == other.amount</pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">04</div>
+          <div>
+            <h4>Packaging <span class="ts-hint">// the package.json moment</span></h4>
+            <p><code>uv</code> writes a <code>pyproject.toml</code> for you. Understanding it makes you self-sufficient. Add dependencies, lock them, publish if you want.</p>
+            <div class="snippet">
+              <div class="snippet-label">// pyproject.toml — your package.json</div>
+<pre>[project]
+name = <span class="s">"my-app"</span>
+version = <span class="s">"0.1.0"</span>
+requires-python = <span class="s">"&gt;=3.12"</span>
+dependencies = [
+    <span class="s">"fastapi[standard]&gt;=0.110"</span>,
+    <span class="s">"httpx&gt;=0.27"</span>,
+]
+
+[dependency-groups]
+dev = [<span class="s">"pytest"</span>, <span class="s">"ruff"</span>, <span class="s">"pyright"</span>]</pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">05</div>
+          <div>
+            <h4>Ship something real <span class="ts-hint">// the only step that matters</span></h4>
+            <p>Pick one of the projects from Part Nine and finish it. Push it to GitHub. Add a README with install + run instructions. The act of shipping is what cements everything from the previous three weeks. Don&apos;t skip this.</p>
+            <ul>
+              <li>Make it runnable by someone else with just <code>uv sync &amp;&amp; uv run ...</code></li>
+              <li>Type-check it cleanly with <code>pyright</code></li>
+              <li>Lint &amp; format with <code>ruff check . &amp;&amp; ruff format .</code></li>
+              <li>Have at least 5 passing tests</li>
+              <li>Then start the next one — fluency comes from repetition</li>
+            </ul>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </section>
+
+  <!-- MAPPING TABLE -->
+  <section class="section">
+    <div class="section-tag">Part Four · Translations</div>
+    <h2>What you know <em>becomes</em> what you&apos;ll use.</h2>
+    <div class="mapping">
+      <div class="map-head">
+        <div>You know</div>
+        <div>You&apos;ll reach for</div>
+        <div>Notes from the field</div>
+      </div>
+      <div class="map-row">
+        <div class="from">npm / pnpm</div>
+        <div class="to">uv</div>
+        <div class="note">The closest in spirit. Fast, modern, sane lockfiles. Skip the pip/poetry debate.</div>
+      </div>
+      <div class="map-row">
+        <div class="from">tsc / typescript</div>
+        <div class="to">pyright</div>
+        <div class="note">Microsoft-built, like TS itself. Editor-fast. Hints are syntax, not enforcement.</div>
+      </div>
+      <div class="map-row">
+        <div class="from">eslint + prettier</div>
+        <div class="to">ruff</div>
+        <div class="note">One tool, written in Rust, replaces a dozen. Lints and formats.</div>
+      </div>
+      <div class="map-row">
+        <div class="from">zod</div>
+        <div class="to">pydantic</div>
+        <div class="note">Runtime validation from types. Even better integrated than zod.</div>
+      </div>
+      <div class="map-row">
+        <div class="from">express / fastify</div>
+        <div class="to">fastapi</div>
+        <div class="note">Type-driven, async-native, automatic docs. The obvious pick.</div>
+      </div>
+      <div class="map-row">
+        <div class="from">prisma / drizzle</div>
+        <div class="to">sqlalchemy 2.x</div>
+        <div class="note">Steeper learning curve, but unmatched power. SQLModel for a softer landing.</div>
+      </div>
+      <div class="map-row">
+        <div class="from">jest / vitest</div>
+        <div class="to">pytest</div>
+        <div class="note">Less ceremony. Fixtures will change how you write tests.</div>
+      </div>
+      <div class="map-row">
+        <div class="from">axios / fetch</div>
+        <div class="to">httpx</div>
+        <div class="note">Sync &amp; async in one library. Familiar API.</div>
+      </div>
+      <div class="map-row">
+        <div class="from">dotenv</div>
+        <div class="to">pydantic-settings</div>
+        <div class="note">Typed environment config. No more <code>process.env.X!</code> assertions.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SURVIVAL SYNTAX -->
+  <section class="section">
+    <div class="section-tag">Part Five · Survival Syntax</div>
+    <h2>Six things with <em>no clean JS</em> equivalent.</h2>
+    <p class="worlds-intro">These aren&apos;t advanced. They&apos;re the everyday moves you&apos;ll reach for on day one — and the ones a TS reflex won&apos;t hand you. Learn these six and you stop writing Python with a JavaScript accent.</p>
+    <div class="syntax">
+
+      <div class="syn">
+        <h4>Slicing<span class="js-hint">// .slice(), but native &amp; better</span></h4>
+        <p>Any sequence supports <code>seq[start:stop:step]</code>. Negative indices count from the end. This replaces a dozen array methods.</p>
+        <div class="snippet">
+          <div class="snippet-label">// slices everywhere</div>
+<pre>nums = [10, 20, 30, 40, 50]
+nums[1:3]     <span class="cmt"># [20, 30]</span>
+nums[-1]      <span class="cmt"># 50  — last item</span>
+nums[:2]      <span class="cmt"># [10, 20]</span>
+nums[::2]     <span class="cmt"># [10, 30, 50]</span>
+text[::-1]    <span class="cmt"># reverse a string</span></pre>
+        </div>
+      </div>
+
+      <div class="syn">
+        <h4>Unpacking &amp; star<span class="js-hint">// destructuring, leveled up</span></h4>
+        <p>Tuple unpacking is the most Pythonic assignment. <code>*</code> collects the rest; <code>**</code> merges dicts; <code>*</code> spreads into calls.</p>
+        <div class="snippet">
+          <div class="snippet-label">// one assignment, many shapes</div>
+<pre>a, b = b, a                <span class="cmt"># swap, no temp</span>
+first, *rest = [1, 2, 3, 4] <span class="cmt"># first=1, rest=[2,3,4]</span>
+cfg = {**base, <span class="s">"debug"</span>: <span class="k">True</span>} <span class="cmt"># merge</span>
+<span class="fn">print</span>(*args)               <span class="cmt"># spread into a call</span></pre>
+        </div>
+      </div>
+
+      <div class="syn">
+        <h4>enumerate / zip<span class="js-hint">// stop writing range(len(x))</span></h4>
+        <p>The idiomatic loop helpers. <code>enumerate</code> gives you the index; <code>zip</code> walks two sequences in lockstep. You&apos;ll use both constantly.</p>
+        <div class="snippet">
+          <div class="snippet-label">// loop like a local</div>
+<pre><span class="cmt"># don't: for i in range(len(items))</span>
+<span class="k">for</span> i, item <span class="k">in</span> <span class="fn">enumerate</span>(items):
+    <span class="fn">print</span>(i, item)
+
+<span class="k">for</span> name, score <span class="k">in</span> <span class="fn">zip</span>(names, scores):
+    ...</pre>
+        </div>
+      </div>
+
+      <div class="syn">
+        <h4>f-strings<span class="js-hint">// template literals + format specs</span></h4>
+        <p>Backtick strings, but with a built-in format mini-language. The <code>{x=}</code> form is the fastest debug print you&apos;ll ever write.</p>
+        <div class="snippet">
+          <div class="snippet-label">// formatting, built in</div>
+<pre>name, pi = <span class="s">"ada"</span>, 3.14159
+<span class="s">f"hi {name}"</span>       <span class="cmt"># hi ada</span>
+<span class="s">f"{pi:.2f}"</span>        <span class="cmt"># 3.14</span>
+<span class="s">f"{1_000_000:,}"</span>   <span class="cmt"># 1,000,000</span>
+<span class="s">f"{name=}"</span>         <span class="cmt"># name='ada'  (debug)</span></pre>
+        </div>
+      </div>
+
+      <div class="syn">
+        <h4>if __name__ == "__main__"<span class="js-hint">// wait, where&apos;s my entrypoint?</span></h4>
+        <p>There is no automatic <code>main</code>. <b>Importing a module runs its top level</b> — so real scripts gate their entrypoint behind this guard, or it fires on every import.</p>
+        <div class="snippet">
+          <div class="snippet-label">// the closest thing to a JS entry file</div>
+<pre><span class="k">def</span> <span class="fn">main</span>() -&gt; <span class="ty">None</span>:
+    ...
+
+<span class="cmt"># runs only when executed directly,</span>
+<span class="cmt"># not when imported by another module</span>
+<span class="k">if</span> __name__ == <span class="s">"__main__"</span>:
+    main()</pre>
+        </div>
+      </div>
+
+      <div class="syn">
+        <h4>Ternary &amp; truthiness<span class="js-hint">// ?: reordered, falsy is broader</span></h4>
+        <p>The ternary reads value-first. Empty collections are falsy — no <code>.length</code> checks. <code>or</code> is like <code>??</code> but triggers on <i>any</i> falsy, not just <code>None</code>.</p>
+        <div class="snippet">
+          <div class="snippet-label">// expressions, not statements</div>
+<pre>status = <span class="s">"on"</span> <span class="k">if</span> enabled <span class="k">else</span> <span class="s">"off"</span>
+
+<span class="cmt"># [], {}, "", 0, None  → all falsy</span>
+<span class="k">if not</span> items:
+    <span class="k">return</span>
+
+name = user_input <span class="k">or</span> <span class="s">"anon"</span>  <span class="cmt"># note: 0/"" trigger it too</span></pre>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- CODE COMPARE -->
+  <section class="section">
+    <div class="section-tag">Part Six · Side by Side</div>
+    <h2>Read it once, you&apos;ll <em>feel</em> the shift.</h2>
+    <div class="compare">
+      <div class="code-pane">
+        <div class="label label-ts"><span class="pip"></span>typescript</div>
+<pre><span class="k">import</span> { z } <span class="k">from</span> <span class="s">"zod"</span>;
+
+<span class="k">const</span> <span class="ty">User</span> = z.object({
+  name: z.string(),
+  age:  z.number().int(),
+});
+
+<span class="k">type</span> <span class="ty">User</span> = z.infer&lt;<span class="k">typeof</span> User&gt;;
+
+<span class="k">async function</span> <span class="fn">greet</span>(u: <span class="ty">User</span>) {
+  <span class="k">const</span> r = <span class="k">await</span> fetch(
+    <span class="s">`https://api.x/${u.name}`</span>
+  );
+  <span class="k">return</span> r.json();
+}</pre>
+      </div>
+      <div class="code-pane">
+        <div class="label label-py"><span class="pip"></span>python</div>
+<pre><span class="k">from</span> pydantic <span class="k">import</span> BaseModel
+<span class="k">import</span> httpx
+
+<span class="k">class</span> <span class="ty">User</span>(BaseModel):
+    name: <span class="ty">str</span>
+    age:  <span class="ty">int</span>
+
+<span class="k">async def</span> <span class="fn">greet</span>(u: <span class="ty">User</span>):
+    <span class="k">async with</span> httpx.AsyncClient() <span class="k">as</span> c:
+        r = <span class="k">await</span> c.get(
+            <span class="s">f"https://api.x/{u.name}"</span>
+        )
+    <span class="k">return</span> r.json()</pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- STARTER PROJECT -->
+  <section class="section">
+    <div class="section-tag">Part Seven · The Starter</div>
+    <h2>A setup you&apos;ll <em>actually</em> enjoy.</h2>
+    <div class="starter">
+      <div class="starter-card">
+        <div class="sub">// 60 seconds, start to finish</div>
+        <h3>The Crossing Kit</h3>
+<pre><span class="cmt"># install uv (once, ever)</span>
+<span class="pmt">$</span> curl -LsSf https://astral.sh/uv/install.sh | sh
+
+<span class="cmt"># new project</span>
+<span class="pmt">$</span> uv init my-app &amp;&amp; cd my-app
+
+<span class="cmt"># add the essentials ([standard] = the fastapi CLI)</span>
+<span class="pmt">$</span> uv add <span class="s">"fastapi[standard]"</span> httpx pydantic
+<span class="pmt">$</span> uv add --dev pytest ruff pyright
+
+<span class="cmt"># run anything</span>
+<span class="pmt">$</span> uv run python main.py
+<span class="pmt">$</span> uv run pytest
+<span class="pmt">$</span> uv run ruff check .</pre>
+      </div>
+      <div class="stack">
+        <div class="stack-item">
+          <div class="role">runtime</div>
+          <div class="name">uv</div>
+          <div class="why">10× faster</div>
+        </div>
+        <div class="stack-item">
+          <div class="role">types</div>
+          <div class="name">pyright</div>
+          <div class="why">tsc&apos;s sibling</div>
+        </div>
+        <div class="stack-item">
+          <div class="role">lint + fmt</div>
+          <div class="name">ruff</div>
+          <div class="why">one tool</div>
+        </div>
+        <div class="stack-item">
+          <div class="role">models</div>
+          <div class="name">pydantic</div>
+          <div class="why">zod, evolved</div>
+        </div>
+        <div class="stack-item">
+          <div class="role">http server</div>
+          <div class="name">fastapi</div>
+          <div class="why">async-native</div>
+        </div>
+        <div class="stack-item">
+          <div class="role">http client</div>
+          <div class="name">httpx</div>
+          <div class="why">sync + async</div>
+        </div>
+        <div class="stack-item">
+          <div class="role">tests</div>
+          <div class="name">pytest</div>
+          <div class="why">less ceremony</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TRAPS -->
+  <section class="section">
+    <div class="section-tag">Part Eight · Things That&apos;ll Trip You</div>
+    <h2>Nine small <em>gotchas</em>.</h2>
+    <div class="traps">
+      <div class="trap">
+        <span class="num">— 01 —</span>
+        <h4>Async isn&apos;t ambient.</h4>
+        <p>In Node every I/O call is async by default. In Python you opt in. Pick sync or async per project and stick with it.</p>
+      </div>
+      <div class="trap">
+        <span class="num">— 02 —</span>
+        <h4>Types don&apos;t run.</h4>
+        <p>Hints are checked by <code>pyright</code>, not at runtime. For runtime validation, that&apos;s what <code>pydantic</code> is for.</p>
+      </div>
+      <div class="trap">
+        <span class="num">— 03 —</span>
+        <h4>Mutable defaults bite.</h4>
+        <p>Never write <code>def f(x=[])</code>. The list is shared across calls. Use <code>x=None</code> and initialize inside.</p>
+      </div>
+      <div class="trap">
+        <span class="num">— 04 —</span>
+        <h4>Activate the venv.</h4>
+        <p>No <code>node_modules</code>. Each project gets its own virtual env. <code>uv run</code> handles it for you — use it.</p>
+      </div>
+      <div class="trap">
+        <span class="num">— 05 —</span>
+        <h4>Imports are picky.</h4>
+        <p>Files and folders become modules. The <code>__init__.py</code> question is real. Read up before your first multi-file project.</p>
+      </div>
+      <div class="trap">
+        <span class="num">— 06 —</span>
+        <h4>The GIL exists.</h4>
+        <p>CPU-bound parallelism needs <code>multiprocessing</code>, not threads. I/O-bound work loves <code>asyncio</code>. Know which you have.</p>
+      </div>
+      <div class="trap">
+        <span class="num">— 07 —</span>
+        <h4><code>is</code> is not <code>===</code>.</h4>
+        <p><code>is</code> tests identity (same object), <code>==</code> tests value. Use <code>x is None</code> for null checks — never <code>x == None</code>. For everything else, reach for <code>==</code>.</p>
+      </div>
+      <div class="trap">
+        <span class="num">— 08 —</span>
+        <h4>No block scope.</h4>
+        <p>Python scoping is function-level. A <code>for</code>/<code>if</code> variable leaks past its block, and closures capture the variable, not its value — the classic loop-in-a-lambda bug.</p>
+      </div>
+      <div class="trap">
+        <span class="num">— 09 —</span>
+        <h4><code>/</code> always floats.</h4>
+        <p><code>5 / 2</code> is <code>2.5</code>, not <code>2</code> — even for two ints. Want integer division? Use <code>//</code>. This bites every JS dev exactly once.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROJECTS -->
+  <section class="section">
+    <div class="section-tag">Part Nine · Build to Learn</div>
+    <h2>Three projects, <em>increasing</em> in depth.</h2>
+    <div class="projects">
+      <div class="project">
+        <div class="level">— Warm Up —</div>
+        <h4>CLI Log Parser</h4>
+        <p>Read a log file, group errors by type, print a colored summary. You&apos;ll learn file I/O, dicts, comprehensions, and the <code>rich</code> library.</p>
+        <div class="uses">uses · rich · click · pathlib</div>
+      </div>
+      <div class="project">
+        <div class="level">— Main Quest —</div>
+        <h4>Typed REST API</h4>
+        <p>Rebuild a small Express service you&apos;ve written before. CRUD, validation, tests, async DB. You&apos;ll feel the parallels and the differences.</p>
+        <div class="uses">uses · fastapi · pydantic · sqlmodel · pytest</div>
+      </div>
+      <div class="project">
+        <div class="level">— Boss Level —</div>
+        <h4>Data Pipeline</h4>
+        <p>Pull from an API, transform with pandas, store in SQLite, expose via FastAPI. The kind of thing Python is genuinely better at than Node.</p>
+        <div class="uses">uses · httpx · pandas · sqlite · fastapi</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- COLOPHON -->
+  <footer class="colophon">
+    <div>
+      <div>// Set in Fraunces &amp; JetBrains Mono</div>
+      <div>// Printed on virtual paper</div>
+    </div>
+    <div class="sig">go build something.</div>
+    <div>
+      <div>End · Vol. 01</div>
+      <div>—</div>
+    </div>
+  </footer>
+
+</div>
+
+</body>
+</html>
