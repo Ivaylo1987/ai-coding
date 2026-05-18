@@ -13,10 +13,11 @@ A practical, opinionated guide for TypeScript/Node.js developers crossing into P
 | 3 | **The Plan, Unpacked** | Day-to-day steps with snippets and a weekly deliverable |
 | 4 | **Translations** | npm→uv, tsc→pyright, zod→pydantic, express→fastapi, and more |
 | 5 | **Survival Syntax** | Six idioms with no clean JS equivalent: slicing, unpacking, `enumerate`/`zip`, f-strings, `__main__`, truthiness |
-| 6 | **Side by Side** | The same program in TS and Python |
-| 7 | **The Starter** | A 60-second `uv` setup and a curated stack |
-| 8 | **Things That'll Trip You** | Nine gotchas, including `is` vs `==`, no block scope, integer division |
-| 9 | **Build to Learn** | Three projects, increasing in depth |
+| 6 | **Concurrency, Decoded** | The GIL and `asyncio` made concrete: the one-key model, when it's released, and a work-type → tool decision table |
+| 7 | **Side by Side** | The same program in TS and Python |
+| 8 | **The Starter** | A 60-second `uv` setup and a curated stack |
+| 9 | **Things That'll Trip You** | Nine gotchas, including `is` vs `==`, no block scope, integer division |
+| 10 | **Build to Learn** | Three projects, increasing in depth |
 
 ## Audience
 

@@ -1812,7 +1812,7 @@ dev = [<span class="s">"pytest"</span>, <span class="s">"ruff"</span>, <span cla
           <div class="step-num">05</div>
           <div>
             <h4>Ship something real <span class="ts-hint">// the only step that matters</span></h4>
-            <p>Pick one of the projects from Part Nine and finish it. Push it to GitHub. Add a README with install + run instructions. The act of shipping is what cements everything from the previous three weeks. Don&apos;t skip this.</p>
+            <p>Pick one of the projects from Part Ten and finish it. Push it to GitHub. Add a README with install + run instructions. The act of shipping is what cements everything from the previous three weeks. Don&apos;t skip this.</p>
             <ul>
               <li>Make it runnable by someone else with just <code>uv sync &amp;&amp; uv run ...</code></li>
               <li>Type-check it cleanly with <code>pyright</code></li>
@@ -1979,9 +1979,95 @@ name = user_input <span class="k">or</span> <span class="s">"anon"</span>  <span
     </div>
   </section>
 
+  <!-- CONCURRENCY -->
+  <section class="section">
+    <div class="section-tag">Part Six · Concurrency, Decoded</div>
+    <h2>The <em>GIL</em> and <em>asyncio</em>, made concrete.</h2>
+    <p class="worlds-intro">This is the one model that does <b>not</b> transfer from Node. The syntax of <code>async</code>/<code>await</code> is the same — what&apos;s different is <i>why</i> Python needs several concurrency tools where Node needs one. Get these two pages and the rest is detail.</p>
+
+    <div class="world-row">
+      <div class="world-topic">
+        <div class="tnum">GIL / 01</div>
+        <div class="tname">One Key</div>
+      </div>
+      <div class="world-col node">
+        <div class="badge">▲ Node.js</div>
+        <p>No GIL, and no need for one. Worker threads have <b>isolated heaps</b> and talk by message passing — two threads never mutate the same object. CPU parallelism just means spawning more workers.</p>
+      </div>
+      <div class="world-col py">
+        <div class="badge">● Python</div>
+        <p><b>One key.</b> A thread may execute Python bytecode only while holding it, and there is exactly one key. Ten threads on sixteen cores still run Python <i>one at a time</i> — CPU-bound threads are no faster than one, and often slower from passing the key around.</p>
+        <div class="callout"><b>The twist:</b> a thread drops the key whenever it <i>waits on I/O</i>. That single rule is everything — threads and <b>asyncio</b> speed up I/O-bound work but never CPU-bound work. The lock exists to keep CPython&apos;s reference counting thread-safe without a lock on every object.</div>
+      </div>
+    </div>
+
+    <div class="world-row">
+      <div class="world-topic">
+        <div class="tnum">ASYNCIO / 02</div>
+        <div class="tname">Opt-in Loop</div>
+      </div>
+      <div class="world-col node">
+        <div class="badge">▲ Node.js</div>
+        <p>The event loop is <b>always running</b>. Every file lives inside it, top-level <code>await</code> works, and it&apos;s the one concurrency model for almost everything you do.</p>
+      </div>
+      <div class="world-col py">
+        <div class="badge">● Python</div>
+        <p>There is <b>no loop until you start one</b> with <code>asyncio.run(main())</code>. Async is an island you enter on purpose; the <code>async</code>/<code>await</code> syntax itself is identical to JS.</p>
+        <div class="callout"><b>The trap that bites every JS dev:</b> calling a coroutine doesn&apos;t run it — <code>greet()</code> just returns an unawaited coroutine. You must <code>await</code> it or hand it to <code>asyncio.run()</code>. And one blocking call (<code>time.sleep</code>, <code>requests</code>) freezes the <i>whole</i> loop — use async libraries or <code>asyncio.to_thread()</code>.</div>
+      </div>
+    </div>
+
+    <div class="snippet" style="margin-top:32px">
+      <div class="snippet-label">// the asyncio essentials</div>
+<pre><span class="k">import</span> asyncio
+
+<span class="k">async def</span> <span class="fn">main</span>():
+    <span class="cmt"># asyncio.gather ≈ Promise.all</span>
+    a, b = <span class="k">await</span> asyncio.gather(fetch(1), fetch(2))
+
+asyncio.run(main())   <span class="cmt"># the only new line vs Node</span>
+
+<span class="cmt"># trap: calling a coroutine does NOT run it</span>
+main()                <span class="cmt"># returns a coroutine, executes nothing</span></pre>
+    </div>
+
+    <div class="mapping" style="margin-top:32px">
+      <div class="map-head">
+        <div>Your work is…</div>
+        <div>Reach for</div>
+        <div>Why</div>
+      </div>
+      <div class="map-row">
+        <div class="from">Waiting on I/O</div>
+        <div class="to">asyncio</div>
+        <div class="note">HTTP, DB, files. The GIL is released during the wait, so concurrency works. This is the case that feels like Node.</div>
+      </div>
+      <div class="map-row">
+        <div class="from">Blocking sync libs</div>
+        <div class="to">threading</div>
+        <div class="note">Threads also drop the GIL on I/O. Use when no async client exists, or wrap one call in asyncio.to_thread().</div>
+      </div>
+      <div class="map-row">
+        <div class="from">CPU computation</div>
+        <div class="to">multiprocessing</div>
+        <div class="note">Separate processes mean separate interpreters and separate GILs — the only path to real parallelism in pure Python.</div>
+      </div>
+      <div class="map-row">
+        <div class="from">Heavy numeric work</div>
+        <div class="to">numpy / polars</div>
+        <div class="note">They compute in C and release the GIL internally — parallel speed without spawning processes.</div>
+      </div>
+    </div>
+
+    <div class="world-takeaway">
+      <div class="label-tk">— The rule —</div>
+      <div class="text-tk">Ask one question: is this work waiting, or computing? Waiting goes to asyncio (or threads); computing goes to multiprocessing or a C-backed library. Stay sync by default and step onto the async island only when real I/O concurrency pays for it.</div>
+    </div>
+  </section>
+
   <!-- CODE COMPARE -->
   <section class="section">
-    <div class="section-tag">Part Six · Side by Side</div>
+    <div class="section-tag">Part Seven · Side by Side</div>
     <h2>Read it once, you&apos;ll <em>feel</em> the shift.</h2>
     <div class="compare">
       <div class="code-pane">
@@ -2023,7 +2109,7 @@ name = user_input <span class="k">or</span> <span class="s">"anon"</span>  <span
 
   <!-- STARTER PROJECT -->
   <section class="section">
-    <div class="section-tag">Part Seven · The Starter</div>
+    <div class="section-tag">Part Eight · The Starter</div>
     <h2>A setup you&apos;ll <em>actually</em> enjoy.</h2>
     <div class="starter">
       <div class="starter-card">
@@ -2086,7 +2172,7 @@ name = user_input <span class="k">or</span> <span class="s">"anon"</span>  <span
 
   <!-- TRAPS -->
   <section class="section">
-    <div class="section-tag">Part Eight · Things That&apos;ll Trip You</div>
+    <div class="section-tag">Part Nine · Things That&apos;ll Trip You</div>
     <h2>Nine small <em>gotchas</em>.</h2>
     <div class="traps">
       <div class="trap">
@@ -2139,7 +2225,7 @@ name = user_input <span class="k">or</span> <span class="s">"anon"</span>  <span
 
   <!-- PROJECTS -->
   <section class="section">
-    <div class="section-tag">Part Nine · Build to Learn</div>
+    <div class="section-tag">Part Ten · Build to Learn</div>
     <h2>Three projects, <em>increasing</em> in depth.</h2>
     <div class="projects">
       <div class="project">
